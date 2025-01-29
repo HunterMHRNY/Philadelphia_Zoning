@@ -1,45 +1,31 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Interactive Map with Search</title>
-    <meta charset="utf-8" />
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- Leaflet CSS & JS -->
+    <title>Interactive Map with Search & Autocomplete</title>
+
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <!-- jQuery & jQuery UI for Autocomplete -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-    <!-- Leaflet Geocoder -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-
-    <!-- ✅ Load jQuery BEFORE jQuery UI -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js"></script>
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/smoothness/jquery-ui.css" />
-
     <style>
-        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
         #map { width: 100%; height: 600px; }
-        #search-container {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0 0 5px rgba(0,0,0,0.3);
-        }
-        input { padding: 5px; width: 250px; }
+        .search-container { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); z-index: 1000; background: white; padding: 10px; border-radius: 5px; }
     </style>
 </head>
 <body>
 
-    <!-- Search Box -->
-    <div id="search-container">
-        <input type="text" id="searchBox" placeholder="Search for a location..." />
+    <!-- Search Bar -->
+    <div class="search-container">
+        <input type="text" id="searchBox" placeholder="Enter an address..." size="50">
         <button onclick="searchLocation()">Search</button>
     </div>
 
@@ -47,15 +33,15 @@
     <div id="map"></div>
 
     <script>
-        // ✅ Initialize the map
+        // Initialize map
         var map = L.map('map').setView([40.0, -75.0], 8);
 
-        // ✅ Add a base map layer
+        // Add OpenStreetMap tile layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // ✅ List of GeoJSON files
+        // List of GeoJSON files
         const geojsonFiles = [
             'ZONE1_2A.geojson',
             'ZONE1_2B.geojson',
@@ -64,31 +50,30 @@
             'ZONE1_2E.geojson'
         ];
 
-        // ✅ Define colors for each zone
-        let zoneColors = { 
+        // Define colors for each zone
+        let zoneColors = {
             "1A": "#F3A6B2",
             "1B": "#A47158",
             "1C": "#595EE1",
             "1D": "#B7484B",
             "1E": "#8D5A99",
-            "2A": "#103A9B",  
+            "2A": "#103A9B",
             "2B": "#13E9DF",
             "2C": "#CF4F8B",
             "2D": "#FF9E17",
             "2E": "#F3A6B2"
         };
 
-        let geojsonLayers = [];
-        let searchMarker = null;
+        let geojsonLayers = {}; // Store layers for zone highlighting
 
-        // ✅ Load and style each GeoJSON file
+        // Load and style each GeoJSON file
         geojsonFiles.forEach(file => {
             fetch(file)
                 .then(response => response.json())
                 .then(data => {
                     let layer = L.geoJSON(data, {
                         style: function(feature) {
-                            let zoneId = feature.properties.ZONEPART || "default"; 
+                            let zoneId = feature.properties.ZONEPART || "default";
                             return {
                                 color: zoneColors[zoneId] || "#000000",
                                 weight: 2,
@@ -97,84 +82,93 @@
                             };
                         }
                     }).addTo(map);
-                    geojsonLayers.push(layer);
+                    
+                    geojsonLayers[file] = layer;
                 })
                 .catch(error => console.error('Error loading ' + file, error));
         });
 
-        // ✅ Search Function - FIXED
+        let marker = null; // Marker for search results
+        let highlightedZone = null; // Highlighted zone reference
+
+        // Search Location Function
         function searchLocation() {
-            let query = document.getElementById('searchBox').value.trim();
-            if (query === "") {
-                alert("Please enter a location.");
-                return;
-            }
+            let query = document.getElementById("searchBox").value;
+            let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1`;
 
-            let apiUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&addressdetails=1`;
-
-            fetch(apiUrl)
+            fetch(url)
                 .then(response => response.json())
-                .then(results => {
-                    console.log("🔍 Geocoder results:", results);
-
-                    if (results.length > 0) {
-                        let result = results[0]; 
-                        let latlng = L.latLng(result.lat, result.lon);
-
-                        console.log(`✅ Found: ${result.display_name} at ${latlng.lat}, ${latlng.lng}`);
-
-                        // ✅ Zoom to searched location
-                        map.setView(latlng, 14);
-
-                        // ✅ Remove previous marker
-                        if (searchMarker) map.removeLayer(searchMarker);
-
-                        // ✅ Add marker at searched location
-                        searchMarker = L.marker(latlng).addTo(map)
-                            .bindPopup(`<b>${result.display_name}</b>`)
-                            .openPopup();
-
-                        // ✅ Highlight the containing zone in gold
-                        geojsonLayers.forEach(layer => {
-                            layer.eachLayer(function (featureLayer) {
-                                if (featureLayer.getBounds().contains(latlng)) {
-                                    featureLayer.setStyle({
-                                        weight: 5,
-                                        color: "#FFD700", // Gold highlight
-                                        opacity: 1,
-                                        fillOpacity: 0.7
-                                    });
-                                    console.log(`🎯 Highlighting Zone for: ${result.display_name}`);
-                                }
-                            });
-                        });
-
-                    } else {
-                        alert("❌ Location not found.");
-                        console.error("❌ No results found for:", query);
+                .then(data => {
+                    if (data.length === 0) {
+                        alert("Location not found!");
+                        return;
                     }
+
+                    let location = data[0];
+                    let lat = parseFloat(location.lat);
+                    let lon = parseFloat(location.lon);
+
+                    // Remove previous marker if exists
+                    if (marker) {
+                        map.removeLayer(marker);
+                    }
+
+                    // Add marker to the searched location
+                    marker = L.marker([lat, lon]).addTo(map)
+                        .bindPopup(location.display_name)
+                        .openPopup();
+
+                    // Zoom to searched location
+                    map.setView([lat, lon], 12);
+
+                    // Highlight the zone containing the searched location
+                    highlightZone(lat, lon);
                 })
-                .catch(error => console.error("❌ Error fetching location:", error));
+                .catch(error => console.error("Search Error:", error));
         }
 
-        // ✅ Autocomplete for Search Bar - FIXED
-        $(document).ready(function() {
+        // Highlight the zone that contains the searched location
+        function highlightZone(lat, lon) {
+            // Reset previous highlight
+            if (highlightedZone) {
+                highlightedZone.resetStyle();
+            }
+
+            Object.values(geojsonLayers).forEach(layer => {
+                layer.eachLayer(function (featureLayer) {
+                    if (featureLayer.getBounds().contains([lat, lon])) {
+                        highlightedZone = featureLayer;
+                        featureLayer.setStyle({ color: "gold", weight: 4 });
+                    }
+                });
+            });
+        }
+
+        // Enable jQuery UI Autocomplete for Address Search
+        $(document).ready(function () {
             $("#searchBox").autocomplete({
-                source: function(request, response) {
-                    let url = `https://nominatim.openstreetmap.org/search?format=json&q=${request.term}`;
-                    $.getJSON(url, function(data) {
-                        response($.map(data, function(item) {
-                            return {
+                source: function (request, response) {
+                    let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(request.term)}&format=json&addressdetails=1&limit=5`;
+
+                    fetch(url)
+                        .then(res => res.json())
+                        .then(data => {
+                            response(data.map(item => ({
                                 label: item.display_name,
-                                value: item.display_name
-                            };
-                        }));
-                    });
+                                value: item.display_name,
+                                lat: item.lat,
+                                lon: item.lon
+                            })));
+                        })
+                        .catch(error => console.error("Autocomplete Error:", error));
                 },
-                minLength: 2
+                select: function (event, ui) {
+                    $("#searchBox").val(ui.item.value);
+                    searchLocation(ui.item.lat, ui.item.lon);
+                    return false;
+                }
             });
         });
-
     </script>
 
 </body>
