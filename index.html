@@ -13,21 +13,14 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
-    <!-- jQuery for Autocomplete -->
+    <!-- ✅ Load jQuery BEFORE jQuery UI -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ui/1.13.1/jquery-ui.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.1/themes/smoothness/jquery-ui.css" />
+    <script src="https://code.jquery.com/ui/1.13.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.1/themes/smoothness/jquery-ui.css" />
 
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-        }
-        #map {
-            width: 100%;
-            height: 600px;
-        }
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        #map { width: 100%; height: 600px; }
         #search-container {
             position: absolute;
             top: 10px;
@@ -39,10 +32,7 @@
             border-radius: 5px;
             box-shadow: 0 0 5px rgba(0,0,0,0.3);
         }
-        input {
-            padding: 5px;
-            width: 250px;
-        }
+        input { padding: 5px; width: 250px; }
     </style>
 </head>
 <body>
@@ -57,15 +47,15 @@
     <div id="map"></div>
 
     <script>
-        // Initialize the map
+        // ✅ Initialize the map
         var map = L.map('map').setView([40.0, -75.0], 8);
 
-        // Add a base map layer
+        // ✅ Add a base map layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // List of GeoJSON files to load
+        // ✅ List of GeoJSON files
         const geojsonFiles = [
             'ZONE1_2A.geojson',
             'ZONE1_2B.geojson',
@@ -74,7 +64,7 @@
             'ZONE1_2E.geojson'
         ];
 
-        // Define colors for each zone
+        // ✅ Define colors for each zone
         let zoneColors = { 
             "1A": "#F3A6B2",
             "1B": "#A47158",
@@ -91,7 +81,7 @@
         let geojsonLayers = [];
         let searchMarker = null;
 
-        // Load and style each GeoJSON file
+        // ✅ Load and style each GeoJSON file
         geojsonFiles.forEach(file => {
             fetch(file)
                 .then(response => response.json())
@@ -112,11 +102,11 @@
                 .catch(error => console.error('Error loading ' + file, error));
         });
 
-        // Search Function - Fully Fixed
+        // ✅ Search Function - FIXED
         function searchLocation() {
             let query = document.getElementById('searchBox').value.trim();
             if (query === "") {
-                alert("Please enter a location to search.");
+                alert("Please enter a location.");
                 return;
             }
 
@@ -124,24 +114,22 @@
                 console.log("🔍 Geocoder results:", results);
                 if (results.length > 0) {
                     let result = results[0]; 
-                    let latlng = L.latLng(result.lat, result.lon);
+                    let latlng = L.latLng(result.center.lat, result.center.lng);
 
-                    console.log(`✅ Location Found: ${result.display_name} at ${latlng.lat}, ${latlng.lng}`);
+                    console.log(`✅ Found: ${result.name} at ${latlng.lat}, ${latlng.lng}`);
 
-                    // Zoom to searched location
+                    // ✅ Zoom to searched location
                     map.setView(latlng, 14);
 
-                    // Remove previous marker if exists
-                    if (searchMarker) {
-                        map.removeLayer(searchMarker);
-                    }
+                    // ✅ Remove previous marker
+                    if (searchMarker) map.removeLayer(searchMarker);
 
-                    // Add marker at searched location
+                    // ✅ Add marker at searched location
                     searchMarker = L.marker(latlng).addTo(map)
-                        .bindPopup(`<b>${result.display_name}</b>`)
+                        .bindPopup(`<b>${result.name}</b>`)
                         .openPopup();
 
-                    // Highlight the containing zone in gold
+                    // ✅ Highlight the containing zone in gold
                     geojsonLayers.forEach(layer => {
                         layer.eachLayer(function (featureLayer) {
                             if (featureLayer.getBounds().contains(latlng)) {
@@ -151,19 +139,19 @@
                                     opacity: 1,
                                     fillOpacity: 0.7
                                 });
-                                console.log(`🎯 Highlighting Zone for: ${result.display_name}`);
+                                console.log(`🎯 Highlighting Zone for: ${result.name}`);
                             }
                         });
                     });
 
                 } else {
-                    alert("❌ Location not found. Try another query.");
+                    alert("❌ Location not found.");
                     console.error("❌ No results found for:", query);
                 }
             });
         }
 
-        // Autocomplete for Search Bar
+        // ✅ Autocomplete for Search Bar - FIXED
         $(document).ready(function() {
             $("#searchBox").autocomplete({
                 source: function(request, response) {
@@ -180,8 +168,8 @@
                 minLength: 2
             });
         });
+
     </script>
 
 </body>
 </html>
-
