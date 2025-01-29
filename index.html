@@ -35,7 +35,7 @@
             "1C": "#3357FF",
             "1D": "#F3FF33",
             "1E": "#FF33A8",
-            "2A": "#FFC300",  // Add colors for Zone 2
+            "2A": "#FFC300",  // Added colors for Zone 2
             "2B": "#DAF7A6",
             "2C": "#900C3F",
             "2D": "#581845",
@@ -50,6 +50,10 @@
                     L.geoJSON(data, {
                         style: function(feature) {
                             let zoneId = feature.properties.ZONEPART || "default"; // Ensure property exists
+
+                            // Debugging: Print the zone ID for each feature
+                            console.log("Feature ZONEPART:", zoneId); 
+
                             return {
                                 color: zoneColors[zoneId] || "#000000", // Default to black if no match
                                 weight: 2,
