@@ -47,6 +47,8 @@
     <div id="map"></div>
 
     <script>
+        console.log("📢 Script Loaded!");
+
         // Initialize the map
         var map = L.map('map').setView([40.0, -75.0], 8);
 
@@ -54,6 +56,8 @@
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
+
+        console.log("✅ Leaflet Map Loaded!");
 
         // List of GeoJSON files
         const geojsonFiles = [
@@ -108,11 +112,20 @@
         // Search Location Function
         function searchLocation() {
             let query = document.getElementById("searchBox").value;
+            if (!query) {
+                alert("Please enter an address.");
+                return;
+            }
+
             let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1`;
+
+            console.log("🔍 Searching for:", url);
 
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
+                    console.log("📌 API Response:", data);
+
                     if (data.length === 0) {
                         alert("Location not found!");
                         return;
@@ -138,7 +151,7 @@
                     // Highlight the zone containing the searched location
                     highlightZone(lat, lon);
                 })
-                .catch(error => console.error("Search Error:", error));
+                .catch(error => console.error("❌ Search Error:", error));
         }
 
         // Highlight the zone that contains the searched location
@@ -158,25 +171,34 @@
             });
         }
 
-        // Enable jQuery UI Autocomplete for Address Search
+        // ** Autocomplete Feature **
         $(document).ready(function () {
+            console.log("💡 jQuery Version:", $.fn.jquery);
+            console.log("💡 jQuery UI Loaded:", typeof $.ui !== "undefined" ? "YES" : "NO");
+
             $("#searchBox").autocomplete({
                 source: function (request, response) {
                     let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(request.term)}&format=json&addressdetails=1&limit=5`;
 
+                    console.log("🔎 Autocomplete API Call:", url);
+
                     fetch(url)
                         .then(res => res.json())
                         .then(data => {
-                            response(data.map(item => ({
-                                label: item.display_name,
-                                value: item.display_name,
-                                lat: item.lat,
-                                lon: item.lon
+                            console.log("📌 Autocomplete Response:", data);
+                            
+                            response(data.map(place => ({
+                                label: place.display_name,
+                                value: place.display_name,
+                                lat: parseFloat(place.lat),
+                                lon: parseFloat(place.lon)
                             })));
                         })
-                        .catch(error => console.error("Autocomplete Error:", error));
+                        .catch(error => console.error("❌ Autocomplete Error:", error));
                 },
                 select: function (event, ui) {
+                    console.log("✅ Autocomplete Selected:", ui.item);
+                    
                     $("#searchBox").val(ui.item.value);
                     searchLocation(ui.item.lat, ui.item.lon);
                     return false;
