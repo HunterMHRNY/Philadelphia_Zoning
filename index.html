@@ -33,6 +33,13 @@
             width: 300px;
             padding: 5px;
         }
+        .ui-autocomplete {
+            max-height: 200px;
+            overflow-y: auto;
+            background: white;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -110,8 +117,8 @@
         let highlightedZone = null; // Highlighted zone reference
 
         // Search Location Function
-        function searchLocation() {
-            let query = document.getElementById("searchBox").value;
+        function searchLocation(lat = null, lon = null) {
+            let query = $("#searchBox").val();
             if (!query) {
                 alert("Please enter an address.");
                 return;
@@ -131,9 +138,9 @@
                         return;
                     }
 
-                    let location = data[0];
-                    let lat = parseFloat(location.lat);
-                    let lon = parseFloat(location.lon);
+                    let location = lat && lon ? { lat, lon, display_name: query } : data[0];
+                    let latNum = parseFloat(location.lat);
+                    let lonNum = parseFloat(location.lon);
 
                     // Remove previous marker if exists
                     if (marker) {
@@ -141,15 +148,15 @@
                     }
 
                     // Add marker to the searched location
-                    marker = L.marker([lat, lon]).addTo(map)
+                    marker = L.marker([latNum, lonNum]).addTo(map)
                         .bindPopup(location.display_name)
                         .openPopup();
 
                     // Zoom to searched location
-                    map.setView([lat, lon], 12);
+                    map.setView([latNum, lonNum], 12);
 
                     // Highlight the zone containing the searched location
-                    highlightZone(lat, lon);
+                    highlightZone(latNum, lonNum);
                 })
                 .catch(error => console.error("❌ Search Error:", error));
         }
@@ -196,6 +203,7 @@
                         })
                         .catch(error => console.error("❌ Autocomplete Error:", error));
                 },
+                minLength: 2, // Require at least 2 characters before suggesting
                 select: function (event, ui) {
                     console.log("✅ Autocomplete Selected:", ui.item);
                     
