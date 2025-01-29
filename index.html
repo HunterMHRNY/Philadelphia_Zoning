@@ -8,7 +8,7 @@
     <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
-    <!-- jQuery & jQuery UI (Autocomplete Feature) -->
+    <!-- jQuery & jQuery UI (For Autocomplete) -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
@@ -42,60 +42,17 @@
     <div id="map"></div>
 
     <script>
+        console.log("📢 Script Loaded!");
+
         // Initialize the map
-        var map = L.map('map').setView([40.0, -75.0], 8); // Adjust initial coordinates and zoom
+        var map = L.map('map').setView([40.0, -75.0], 8); 
 
         // Add a base map layer
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // List of GeoJSON files to load
-        const geojsonFiles = [
-            'ZONE1_2A.geojson',
-            'ZONE1_2B.geojson',
-            'ZONE1_2C.geojson',
-            'ZONE1_2D.geojson',
-            'ZONE1_2E.geojson'
-        ];
-
-        // Define colors for each zone
-        let zoneColors = {
-            "1A": "#F3A6B2",
-            "1B": "#A47158",
-            "1C": "#595EE1",
-            "1D": "#B7484B",
-            "1E": "#8D5A99",
-            "2A": "#103A9B",
-            "2B": "#13E9DF",
-            "2C": "#CF4F8B",
-            "2D": "#FF9E17",
-            "2E": "#F3A6B2"
-        };
-
-        let geojsonLayers = {}; // Store layers for each zone
-
-        // Load and style each GeoJSON file
-        geojsonFiles.forEach(file => {
-            fetch(file)
-                .then(response => response.json())
-                .then(data => {
-                    let layer = L.geoJSON(data, {
-                        style: function(feature) {
-                            let zoneId = feature.properties.ZONEPART || "default";
-                            return {
-                                color: zoneColors[zoneId] || "#000000",
-                                weight: 2,
-                                opacity: 0.8,
-                                fillOpacity: 0.5
-                            };
-                        }
-                    }).addTo(map);
-
-                    geojsonLayers[file] = layer;
-                })
-                .catch(error => console.error('Error loading ' + file, error));
-        });
+        console.log("✅ Leaflet Map Loaded!");
 
         // Function to search for an address
         function searchLocation() {
@@ -107,39 +64,48 @@
 
             let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(address)}&format=json&addressdetails=1`;
 
+            console.log("🔍 Searching for address:", url);
+
             fetch(url)
                 .then(response => response.json())
                 .then(data => {
+                    console.log("📌 API Response:", data);
+
                     if (data.length > 0) {
                         let lat = parseFloat(data[0].lat);
                         let lon = parseFloat(data[0].lon);
 
-                        map.setView([lat, lon], 14); // Zoom to location
+                        map.setView([lat, lon], 14);
 
                         // Add marker
                         L.marker([lat, lon]).addTo(map)
                             .bindPopup(data[0].display_name)
                             .openPopup();
+
                     } else {
                         alert("Location not found.");
                     }
                 })
-                .catch(error => console.error('Error fetching location:', error));
+                .catch(error => console.error('❌ Error fetching location:', error));
         }
 
         // ** Autocomplete Feature **
         $(document).ready(function () {
-            console.log("jQuery Version:", $.fn.jquery);
-            console.log("jQuery UI Loaded:", typeof $.ui !== "undefined" ? "YES" : "NO");
+            console.log("💡 jQuery Version:", $.fn.jquery);
+            console.log("💡 jQuery UI Loaded:", typeof $.ui !== "undefined" ? "YES" : "NO");
 
             $("#addressInput").autocomplete({
                 source: function (request, response) {
                     let query = request.term;
                     let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&addressdetails=1&limit=5`;
 
+                    console.log("🔎 Autocomplete API Call:", url);
+
                     fetch(url)
                         .then(res => res.json())
                         .then(data => {
+                            console.log("📌 Autocomplete Response:", data);
+                            
                             response(data.map(place => ({
                                 label: place.display_name,
                                 value: place.display_name,
@@ -147,10 +113,12 @@
                                 lon: parseFloat(place.lon)
                             })));
                         })
-                        .catch(error => console.error("Error fetching autocomplete:", error));
+                        .catch(error => console.error("❌ Error fetching autocomplete:", error));
                 },
                 select: function (event, ui) {
-                    map.setView([ui.item.lat, ui.item.lon], 14); // Zoom to selected location
+                    console.log("✅ Autocomplete Selected:", ui.item);
+                    
+                    map.setView([ui.item.lat, ui.item.lon], 14); 
 
                     // Add marker
                     L.marker([ui.item.lat, ui.item.lon]).addTo(map)
