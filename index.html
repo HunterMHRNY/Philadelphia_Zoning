@@ -13,6 +13,11 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
+    <!-- Autocomplete Library -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-ui-autocomplete/1.13.1/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-ui-autocomplete/1.13.1/jquery-ui.min.css" />
+
     <style>
         body {
             margin: 0;
@@ -83,9 +88,8 @@
             "2E": "#F3A6B2"
         };
 
-        // Store loaded layers for reference
         let geojsonLayers = [];
-        let searchMarker = null; // Store the marker for search results
+        let searchMarker = null;
 
         // Load and style each GeoJSON file
         geojsonFiles.forEach(file => {
@@ -94,9 +98,9 @@
                 .then(data => {
                     let layer = L.geoJSON(data, {
                         style: function(feature) {
-                            let zoneId = feature.properties.ZONEPART || "default"; // Ensure property exists
+                            let zoneId = feature.properties.ZONEPART || "default"; 
                             return {
-                                color: zoneColors[zoneId] || "#000000", // Default to black if no match
+                                color: zoneColors[zoneId] || "#000000",
                                 weight: 2,
                                 opacity: 0.8,
                                 fillOpacity: 0.5
@@ -108,37 +112,48 @@
                 .catch(error => console.error('Error loading ' + file, error));
         });
 
-        // Search functionality with debugging
+        // Search Function
         function searchLocation() {
             let query = document.getElementById('searchBox').value.trim();
-            
             if (query === "") {
                 alert("Please enter a location to search.");
                 return;
             }
 
-            // Use Leaflet Geocoder to find location
             L.Control.Geocoder.nominatim().geocode(query, function(results) {
-                console.log("🔍 Geocoder results:", results); // Debugging log
-
+                console.log("🔍 Geocoder results:", results);
                 if (results.length > 0) {
-                    let result = results[0]; // Always use the first result
-                    let latlng = L.latLng(result.center.lat, result.center.lng);
+                    let result = results[0]; 
+                    let latlng = L.latLng(result.lat, result.lon);
 
-                    // Center map on result
-                    map.setView(latlng, 13); // Zoom into the found location
+                    // Zoom to searched location
+                    map.setView(latlng, 14);
 
                     // Remove previous marker if exists
                     if (searchMarker) {
                         map.removeLayer(searchMarker);
                     }
 
-                    // Add a new marker for the searched location
+                    // Add marker at searched location
                     searchMarker = L.marker(latlng).addTo(map)
                         .bindPopup(`<b>${result.name || query}</b><br>${result.display_name}`)
                         .openPopup();
 
-                    console.log(`📍 Marker added at: ${latlng.lat}, ${latlng.lng}`); // Debugging log
+                    console.log(`📍 Marker added at: ${latlng.lat}, ${latlng.lng}`);
+
+                    // Highlight the containing zone in gold
+                    geojsonLayers.forEach(layer => {
+                        layer.eachLayer(function (featureLayer) {
+                            if (featureLayer.getBounds().contains(latlng)) {
+                                featureLayer.setStyle({
+                                    weight: 5,
+                                    color: "#FFD700", // Gold highlight
+                                    opacity: 1,
+                                    fillOpacity: 0.7
+                                });
+                            }
+                        });
+                    });
 
                 } else {
                     alert("❌ Location not found. Try another query.");
@@ -146,6 +161,24 @@
                 }
             });
         }
+
+        // Autocomplete for Search Bar
+        $(document).ready(function() {
+            $("#searchBox").autocomplete({
+                source: function(request, response) {
+                    let url = `https://nominatim.openstreetmap.org/search?format=json&q=${request.term}`;
+                    $.getJSON(url, function(data) {
+                        response($.map(data, function(item) {
+                            return {
+                                label: item.display_name,
+                                value: item.display_name
+                            };
+                        }));
+                    });
+                },
+                minLength: 2
+            });
+        });
     </script>
 
 </body>
