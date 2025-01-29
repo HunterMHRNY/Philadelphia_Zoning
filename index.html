@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script> <!-- Added this line -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 </head>
 <body>
     <div id="map" style="width: 100%; height: 600px;"></div>
@@ -19,20 +19,30 @@
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // Load multiple GeoJSON files
+        // Load multiple GeoJSON files with styling
         const geojsonFiles = [
             'ZONE1_2A.geojson',
             'ZONE1_2B.geojson',
             'ZONE1_2C.geojson',
             'ZONE1_2D.geojson',
-            'ZONE1_2E.geojson'  // Fixed duplicate issue
+            'ZONE1_2E.geojson'
         ];
 
         geojsonFiles.forEach(file => {
             fetch(file)
                 .then(response => response.json())
                 .then(data => {
-                    L.geoJSON(data).addTo(map);
+                    L.geoJSON(data, {
+                        style: function(feature) {
+                            return {
+                                color: feature.properties.stroke || "#000000", // Outline color (default: black)
+                                weight: 2,
+                                opacity: 1,
+                                fillColor: feature.properties.fill || "#ff7800", // Fill color (default: orange)
+                                fillOpacity: feature.properties["fill-opacity"] || 0.5
+                            };
+                        }
+                    }).addTo(map);
                 })
                 .catch(error => console.error('Error loading ' + file, error));
         });
