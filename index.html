@@ -110,45 +110,51 @@
                 return;
             }
 
-            L.Control.Geocoder.nominatim().geocode(query, function(results) {
-                console.log("🔍 Geocoder results:", results);
-                if (results.length > 0) {
-                    let result = results[0]; 
-                    let latlng = L.latLng(result.center.lat, result.center.lng);
+            let apiUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&addressdetails=1`;
 
-                    console.log(`✅ Found: ${result.name} at ${latlng.lat}, ${latlng.lng}`);
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(results => {
+                    console.log("🔍 Geocoder results:", results);
 
-                    // ✅ Zoom to searched location
-                    map.setView(latlng, 14);
+                    if (results.length > 0) {
+                        let result = results[0]; 
+                        let latlng = L.latLng(result.lat, result.lon);
 
-                    // ✅ Remove previous marker
-                    if (searchMarker) map.removeLayer(searchMarker);
+                        console.log(`✅ Found: ${result.display_name} at ${latlng.lat}, ${latlng.lng}`);
 
-                    // ✅ Add marker at searched location
-                    searchMarker = L.marker(latlng).addTo(map)
-                        .bindPopup(`<b>${result.name}</b>`)
-                        .openPopup();
+                        // ✅ Zoom to searched location
+                        map.setView(latlng, 14);
 
-                    // ✅ Highlight the containing zone in gold
-                    geojsonLayers.forEach(layer => {
-                        layer.eachLayer(function (featureLayer) {
-                            if (featureLayer.getBounds().contains(latlng)) {
-                                featureLayer.setStyle({
-                                    weight: 5,
-                                    color: "#FFD700", // Gold highlight
-                                    opacity: 1,
-                                    fillOpacity: 0.7
-                                });
-                                console.log(`🎯 Highlighting Zone for: ${result.name}`);
-                            }
+                        // ✅ Remove previous marker
+                        if (searchMarker) map.removeLayer(searchMarker);
+
+                        // ✅ Add marker at searched location
+                        searchMarker = L.marker(latlng).addTo(map)
+                            .bindPopup(`<b>${result.display_name}</b>`)
+                            .openPopup();
+
+                        // ✅ Highlight the containing zone in gold
+                        geojsonLayers.forEach(layer => {
+                            layer.eachLayer(function (featureLayer) {
+                                if (featureLayer.getBounds().contains(latlng)) {
+                                    featureLayer.setStyle({
+                                        weight: 5,
+                                        color: "#FFD700", // Gold highlight
+                                        opacity: 1,
+                                        fillOpacity: 0.7
+                                    });
+                                    console.log(`🎯 Highlighting Zone for: ${result.display_name}`);
+                                }
+                            });
                         });
-                    });
 
-                } else {
-                    alert("❌ Location not found.");
-                    console.error("❌ No results found for:", query);
-                }
-            });
+                    } else {
+                        alert("❌ Location not found.");
+                        console.error("❌ No results found for:", query);
+                    }
+                })
+                .catch(error => console.error("❌ Error fetching location:", error));
         }
 
         // ✅ Autocomplete for Search Bar - FIXED
