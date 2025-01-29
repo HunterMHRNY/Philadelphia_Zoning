@@ -112,7 +112,7 @@
                 .catch(error => console.error('Error loading ' + file, error));
         });
 
-        // Search Function with Fixes
+        // Search Function - Fully Fixed
         function searchLocation() {
             let query = document.getElementById('searchBox').value.trim();
             if (query === "") {
@@ -126,6 +126,8 @@
                     let result = results[0]; 
                     let latlng = L.latLng(result.lat, result.lon);
 
+                    console.log(`✅ Location Found: ${result.display_name} at ${latlng.lat}, ${latlng.lng}`);
+
                     // Zoom to searched location
                     map.setView(latlng, 14);
 
@@ -136,10 +138,8 @@
 
                     // Add marker at searched location
                     searchMarker = L.marker(latlng).addTo(map)
-                        .bindPopup(`<b>${result.name || query}</b><br>${result.display_name}`)
+                        .bindPopup(`<b>${result.display_name}</b>`)
                         .openPopup();
-
-                    console.log(`📍 Marker added at: ${latlng.lat}, ${latlng.lng}`);
 
                     // Highlight the containing zone in gold
                     geojsonLayers.forEach(layer => {
@@ -151,6 +151,7 @@
                                     opacity: 1,
                                     fillOpacity: 0.7
                                 });
+                                console.log(`🎯 Highlighting Zone for: ${result.display_name}`);
                             }
                         });
                     });
@@ -183,3 +184,4 @@
 
 </body>
 </html>
+
