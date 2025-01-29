@@ -85,6 +85,7 @@
 
         // Store loaded layers for reference
         let geojsonLayers = [];
+        let searchMarker = null; // Store the marker for search results
 
         // Load and style each GeoJSON file
         geojsonFiles.forEach(file => {
@@ -107,33 +108,40 @@
                 .catch(error => console.error('Error loading ' + file, error));
         });
 
-        // Search functionality
+        // Search functionality with debugging
         function searchLocation() {
-            let query = document.getElementById('searchBox').value;
+            let query = document.getElementById('searchBox').value.trim();
             
-            if (query.trim() === "") {
+            if (query === "") {
                 alert("Please enter a location to search.");
                 return;
             }
 
             // Use Leaflet Geocoder to find location
             L.Control.Geocoder.nominatim().geocode(query, function(results) {
+                console.log("Geocoder results:", results); // Debugging log
+
                 if (results.length > 0) {
                     let latlng = results[0].center;
                     map.setView(latlng, 12); // Zoom into found location
-                    
-                    // Highlight the found location
-                    let marker = L.marker(latlng).addTo(map)
+
+                    // Remove previous marker if exists
+                    if (searchMarker) {
+                        map.removeLayer(searchMarker);
+                    }
+
+                    // Highlight the found location with a marker
+                    searchMarker = L.marker(latlng).addTo(map)
                         .bindPopup(`<b>${query}</b>`)
                         .openPopup();
 
-                    // Check which zone the point falls in
+                    // Check which zone the point falls in and highlight
                     geojsonLayers.forEach(layer => {
                         layer.eachLayer(function (featureLayer) {
                             if (featureLayer.getBounds().contains(latlng)) {
                                 featureLayer.setStyle({
                                     weight: 5,
-                                    color: "#FFD700", // Highlight the zone
+                                    color: "#FFD700", // Highlight the zone in gold
                                     opacity: 1,
                                     fillOpacity: 0.7
                                 });
