@@ -76,7 +76,7 @@
             "1C": "#595EE1",
             "1D": "#B7484B",
             "1E": "#8D5A99",
-            "2A": "#103A9B",  // Added colors for Zone 2
+            "2A": "#103A9B",  
             "2B": "#13E9DF",
             "2C": "#CF4F8B",
             "2D": "#FF9E17",
@@ -119,38 +119,30 @@
 
             // Use Leaflet Geocoder to find location
             L.Control.Geocoder.nominatim().geocode(query, function(results) {
-                console.log("Geocoder results:", results); // Debugging log
+                console.log("🔍 Geocoder results:", results); // Debugging log
 
                 if (results.length > 0) {
-                    let latlng = results[0].center;
-                    map.setView(latlng, 12); // Zoom into found location
+                    let result = results[0]; // Always use the first result
+                    let latlng = L.latLng(result.center.lat, result.center.lng);
+
+                    // Center map on result
+                    map.setView(latlng, 13); // Zoom into the found location
 
                     // Remove previous marker if exists
                     if (searchMarker) {
                         map.removeLayer(searchMarker);
                     }
 
-                    // Highlight the found location with a marker
+                    // Add a new marker for the searched location
                     searchMarker = L.marker(latlng).addTo(map)
-                        .bindPopup(`<b>${query}</b>`)
+                        .bindPopup(`<b>${result.name || query}</b><br>${result.display_name}`)
                         .openPopup();
 
-                    // Check which zone the point falls in and highlight
-                    geojsonLayers.forEach(layer => {
-                        layer.eachLayer(function (featureLayer) {
-                            if (featureLayer.getBounds().contains(latlng)) {
-                                featureLayer.setStyle({
-                                    weight: 5,
-                                    color: "#FFD700", // Highlight the zone in gold
-                                    opacity: 1,
-                                    fillOpacity: 0.7
-                                });
-                            }
-                        });
-                    });
+                    console.log(`📍 Marker added at: ${latlng.lat}, ${latlng.lng}`); // Debugging log
 
                 } else {
-                    alert("Location not found. Try another query.");
+                    alert("❌ Location not found. Try another query.");
+                    console.error("❌ No results found for:", query);
                 }
             });
         }
