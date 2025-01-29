@@ -19,7 +19,7 @@
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // Load multiple GeoJSON files with styling
+        // List of GeoJSON files to load
         const geojsonFiles = [
             'ZONE1_2A.geojson',
             'ZONE1_2B.geojson',
@@ -28,18 +28,28 @@
             'ZONE1_2E.geojson'
         ];
 
+        // Define colors for each zone
+        let zoneColors = {
+            "1A": "#FF5733",
+            "1B": "#33FF57",
+            "1C": "#3357FF",
+            "1D": "#F3FF33",
+            "1E": "#FF33A8"
+        };
+
+        // Load and style each GeoJSON file
         geojsonFiles.forEach(file => {
             fetch(file)
                 .then(response => response.json())
                 .then(data => {
                     L.geoJSON(data, {
                         style: function(feature) {
+                            let zoneId = feature.properties.ZONEPART || "default"; // Ensure property exists
                             return {
-                                color: feature.properties.stroke || "#000000", // Outline color (default: black)
+                                color: zoneColors[zoneId] || "#000000", // Default to black if no match
                                 weight: 2,
-                                opacity: 1,
-                                fillColor: feature.properties.fill || "#ff7800", // Fill color (default: orange)
-                                fillOpacity: feature.properties["fill-opacity"] || 0.5
+                                opacity: 0.8,
+                                fillOpacity: 0.5
                             };
                         }
                     }).addTo(map);
