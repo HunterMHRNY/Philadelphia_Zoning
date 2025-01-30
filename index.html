@@ -83,17 +83,24 @@
                                 fillOpacity: 0.5
                             };
                         },
-                        // Attach zone labels
-                        onEachFeature: function(feature, layer) {
-                            if (feature.properties && feature.properties.ZONEPART) {
-                                layer.bindTooltip(`Zone ${feature.properties.ZONEPART}`, {
-                                    permanent: true,
-                                    className: "zone-label",
-                                    direction: "center"
-                                });
-                            }
-                        }
-                    }).addTo(map);
+                onEachFeature: function(feature, layer) {
+                    let zoneId = feature.properties.ZONEPART;
+
+                    // Prevent duplicate labels
+                    if (zoneId && !zoneLabels[zoneId]) {
+                        let center = layer.getBounds().getCenter();
+                        let label = L.marker(center, {
+                            icon: L.divIcon({
+                                className: 'zone-label',
+                                html: `Zone ${zoneId}`,
+                                iconSize: [80, 20]
+                            })
+                        }).addTo(map);
+
+                        zoneLabels[zoneId] = label;
+                    }
+                }
+            }).addTo(map);
                     
                     geojsonLayers[file] = layer;
                 })
