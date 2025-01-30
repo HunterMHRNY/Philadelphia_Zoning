@@ -68,21 +68,23 @@
 
         let geojsonLayers = {}; // Store layers for zone highlighting
 
-        // Load and style each GeoJSON file
-        geojsonFiles.forEach(file => {
-            fetch(file)
-                .then(response => response.json())
-                .then(data => {
-                    let layer = L.geoJSON(data, {
-                        style: function(feature) {
-                            let zoneId = feature.properties.ZONEPART || "default";
-                            return {
-                                color: zoneColors[zoneId] || "#000000",
-                                weight: 2,
-                                opacity: 0.8,
-                                fillOpacity: 0.5
-                            };
-                        },
+// Store zone labels to prevent duplicates
+let zoneLabels = {};
+
+geojsonFiles.forEach(file => {
+    fetch(file)
+        .then(response => response.json())
+        .then(data => {
+            let layer = L.geoJSON(data, {
+                style: function(feature) {
+                    let zoneId = feature.properties.ZONEPART || "default";
+                    return {
+                        color: zoneColors[zoneId] || "#000000",
+                        weight: 2,
+                        opacity: 0.8,
+                        fillOpacity: 0.5
+                    };
+                },
                 onEachFeature: function(feature, layer) {
                     let zoneId = feature.properties.ZONEPART;
 
@@ -101,11 +103,12 @@
                     }
                 }
             }).addTo(map);
-                    
-                    geojsonLayers[file] = layer;
-                })
-                .catch(error => console.error('Error loading ' + file, error));
-        });
+            
+            geojsonLayers[file] = layer;
+        })
+        .catch(error => console.error('Error loading ' + file, error));
+});
+
 
         let marker = null; // Marker for search results
         let highlightedZone = null; // Highlighted zone reference
