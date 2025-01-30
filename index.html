@@ -81,6 +81,15 @@
                                 weight: 2,
                                 opacity: 0.8,
                                 fillOpacity: 0.5
+                    };
+                },
+                // Attach zone labels
+                onEachFeature: function(feature, layer) {
+                    if (feature.properties && feature.properties.ZONEPART) {
+                        layer.bindTooltip(`Zone ${feature.properties.ZONEPART}`, {
+                            permanent: true,   // Keeps label always visible
+                            className: "zone-label",  // Uses styles from CSS
+                            direction: "center"  // Centered label
                             };
                         }
                     }).addTo(map);
