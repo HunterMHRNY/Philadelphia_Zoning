@@ -28,10 +28,11 @@
     font-size: 14px;
     color: black;
     background: white;
-    border: 1px solid gray;
-    padding: 3px;
+    padding: 5px;
     border-radius: 5px;
+    border: 1px solid gray;
+    text-align: center;
+    white-space: nowrap;
     box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
 }
-
 
