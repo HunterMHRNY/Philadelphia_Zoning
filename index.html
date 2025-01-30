@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html> 
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -81,16 +81,17 @@
                                 weight: 2,
                                 opacity: 0.8,
                                 fillOpacity: 0.5
-                    };
-                },
-                // Attach zone labels
-                onEachFeature: function(feature, layer) {
-                    if (feature.properties && feature.properties.ZONEPART) {
-                        layer.bindTooltip(`Zone ${feature.properties.ZONEPART}`, {
-                            permanent: true,   // Keeps label always visible
-                            className: "zone-label",  // Uses styles from CSS
-                            direction: "center"  // Centered label
                             };
+                        },
+                        // Attach zone labels
+                        onEachFeature: function(feature, layer) {
+                            if (feature.properties && feature.properties.ZONEPART) {
+                                layer.bindTooltip(`Zone ${feature.properties.ZONEPART}`, {
+                                    permanent: true,
+                                    className: "zone-label",
+                                    direction: "center"
+                                });
+                            }
                         }
                     }).addTo(map);
                     
@@ -189,7 +190,7 @@
                         })
                         .catch(error => console.error("❌ Autocomplete Error:", error));
                 },
-                minLength: 2, // Require at least 2 characters before suggesting
+                minLength: 2,
                 select: function (event, ui) {
                     console.log("✅ Autocomplete Selected:", ui.item);
                     
