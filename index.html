@@ -29,43 +29,6 @@
 
     <!-- Map Container -->
     <div id="map"></div>
-   
-    <style>
-        #map { width: 100%; height: 600px; }
-        .search-container {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.3);
-        }
-        #searchBox {
-            width: 300px;
-            padding: 5px;
-        }
-        .ui-autocomplete {
-            max-height: 200px;
-            overflow-y: auto;
-            background: white;
-            border: 1px solid #ccc;
-            font-size: 14px;
-        }
-    </style>
-</head>
-<body>
-
-    <!-- Search Bar -->
-    <div class="search-container">
-        <input type="text" id="searchBox" placeholder="Enter an address..." size="50">
-        <button onclick="searchLocation()">Search</button>
-    </div>
-
-    <!-- Map Container -->
-    <div id="map"></div>
 
     <script>
         console.log("📢 Script Loaded!");
